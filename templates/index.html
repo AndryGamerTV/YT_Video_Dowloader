@@ -1,9 +1,12 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YT Pro Loader</title>
+    <title>TubeSaver | Завантажувач</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2245%22 fill=%22%23ff0050%22/><path d=%22M35 30 L75 50 L35 70 Z%22 fill=%22white%22/></svg>">
+    
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 </head>
@@ -11,21 +14,24 @@
 
     <div class="lang-switch">
         <select id="langSelect" onchange="changeLanguage(this.value)">
-            <option value="ru">🇷🇺 Русский</option>
+            <option value="uk">🇺🇦 Українська</option>
             <option value="en">🇺🇸 English</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="pl">🇵🇱 Polski</option>
         </select>
     </div>
 
     <div class="container">
         <header>
-            <h1>YT <span>Pro</span></h1>
-            <p data-i18n="subtitle">Профессиональный загрузчик контента</p>
+            <h1>Tube<span>Saver</span></h1>
+            <p data-i18n="subtitle">Швидке завантаження без збереження на сервері</p>
         </header>
 
         <div class="card">
             <div class="input-group">
-                <input type="text" id="videoUrl" placeholder="Ссылка на видео...">
-                <button onclick="analyzeVideo()" data-i18n="btn_find">Найти</button>
+                <input type="text" id="videoUrl" placeholder="...">
+                <button onclick="analyzeVideo()" data-i18n="btn_find">Знайти</button>
             </div>
 
             <div id="loader" class="loader hidden"></div>
@@ -42,28 +48,27 @@
                     <div class="setting-row">
                         <label data-i18n="lbl_format">Формат:</label>
                         <select id="modeSelect" onchange="toggleOptions()">
-                            <option value="video">Видео (MP4)</option>
-                            <option value="audio">Аудио (MP3)</option>
+                            <option value="video" data-i18n="opt_video">Відео (MP4)</option>
+                            <option value="audio" data-i18n="opt_audio">Аудіо (MP3)</option>
                         </select>
                     </div>
 
                     <div class="setting-row" id="videoOptions">
-                        <label data-i18n="lbl_res">Разрешение:</label>
+                        <label data-i18n="lbl_res">Якість:</label>
                         <select id="resSelect">
                             </select>
                     </div>
 
                     <div class="setting-row hidden" id="audioOptions">
-                        <label data-i18n="lbl_bitrate">Битрейт:</label>
+                        <label data-i18n="lbl_bitrate">Бітрейт:</label>
                         <select id="bitrateSelect">
-                            <option value="320">320 kbps (Высокое)</option>
-                            <option value="256">256 kbps</option>
-                            <option value="192" selected>192 kbps (Стандарт)</option>
-                            <option value="128">128 kbps</option>
+                            <option value="320">320 kbps (High)</option>
+                            <option value="192" selected>192 kbps (Normal)</option>
+                            <option value="128">128 kbps (Low)</option>
                         </select>
                     </div>
 
-                    <button class="download-btn" onclick="downloadContent()" data-i18n="btn_download">Скачать</button>
+                    <button class="download-btn" onclick="downloadContent()" data-i18n="btn_download">Завантажити</button>
                 </div>
             </div>
             
@@ -73,42 +78,87 @@
 
     <script>
         const translations = {
-            ru: {
-                subtitle: "Профессиональный загрузчик контента",
-                placeholder: "Вставьте ссылку...",
-                btn_find: "Найти",
-                btn_download: "Скачать файл",
+            uk: {
+                subtitle: "Швидке завантаження без збереження на сервері",
+                placeholder: "Вставте посилання на YouTube...",
+                btn_find: "Знайти",
+                btn_download: "Завантажити файл",
                 lbl_format: "Формат:",
-                lbl_res: "Разрешение:",
-                lbl_bitrate: "Качество звука:",
-                status_ready: "Готово!",
-                status_downloading: "Обработка и загрузка...",
-                status_error: "Ошибка: ",
-                status_conn_err: "Ошибка сети",
-                opt_best: "Максимальное (Best)"
+                lbl_res: "Якість:",
+                lbl_bitrate: "Якість звуку:",
+                opt_video: "Відео (MP4)",
+                opt_audio: "Аудіо (MP3)",
+                status_ready: "Готово! Файл завантажено.",
+                status_downloading: "Обробка...",
+                status_error: "Помилка: ",
+                status_conn_err: "Помилка з'єднання"
             },
             en: {
-                subtitle: "Professional content downloader",
-                placeholder: "Paste link here...",
+                subtitle: "Fast download, no server storage",
+                placeholder: "Paste YouTube link here...",
                 btn_find: "Find",
                 btn_download: "Download File",
                 lbl_format: "Format:",
-                lbl_res: "Resolution:",
+                lbl_res: "Quality:",
                 lbl_bitrate: "Audio Quality:",
-                status_ready: "Done!",
-                status_downloading: "Processing & Downloading...",
+                opt_video: "Video (MP4)",
+                opt_audio: "Audio (MP3)",
+                status_ready: "Done! File downloaded.",
+                status_downloading: "Processing...",
                 status_error: "Error: ",
-                status_conn_err: "Connection Error",
-                opt_best: "Maximum (Best)"
+                status_conn_err: "Connection Error"
+            },
+            ru: {
+                subtitle: "Быстрая загрузка без сохранения на сервере",
+                placeholder: "Вставьте ссылку на YouTube...",
+                btn_find: "Найти",
+                btn_download: "Скачать файл",
+                lbl_format: "Формат:",
+                lbl_res: "Качество:",
+                lbl_bitrate: "Качество звука:",
+                opt_video: "Видео (MP4)",
+                opt_audio: "Аудио (MP3)",
+                status_ready: "Готово! Файл скачан.",
+                status_downloading: "Обработка...",
+                status_error: "Ошибка: ",
+                status_conn_err: "Ошибка сети"
+            },
+            de: {
+                subtitle: "Schneller Download ohne Speicherung",
+                placeholder: "YouTube-Link hier einfügen...",
+                btn_find: "Suchen",
+                btn_download: "Herunterladen",
+                lbl_format: "Format:",
+                lbl_res: "Qualität:",
+                lbl_bitrate: "Audioqualität:",
+                opt_video: "Video (MP4)",
+                opt_audio: "Audio (MP3)",
+                status_ready: "Fertig!",
+                status_downloading: "Verarbeitung...",
+                status_error: "Fehler: ",
+                status_conn_err: "Verbindungsfehler"
+            },
+            pl: {
+                subtitle: "Szybkie pobieranie bez zapisywania",
+                placeholder: "Wklej link do YouTube tutaj...",
+                btn_find: "Szukaj",
+                btn_download: "Pobierz plik",
+                lbl_format: "Format:",
+                lbl_res: "Jakość:",
+                lbl_bitrate: "Jakość dźwięku:",
+                opt_video: "Wideo (MP4)",
+                opt_audio: "Audio (MP3)",
+                status_ready: "Gotowe!",
+                status_downloading: "Przetwarzanie...",
+                status_error: "Błąd: ",
+                status_conn_err: "Błąd połączenia"
             }
         };
 
-        let currentLang = 'ru';
+        let currentLang = 'uk';
 
         document.addEventListener("DOMContentLoaded", () => {
-            const userLang = navigator.language.startsWith('en') ? 'en' : 'ru';
-            changeLanguage(userLang);
-            document.getElementById('langSelect').value = userLang;
+            changeLanguage('uk');
         });
 
         function changeLanguage(lang) {
@@ -162,22 +212,13 @@
                     document.getElementById('videoTitle').innerText = data.title;
                     document.getElementById('videoDuration').innerText = data.duration;
                     
-                    // --- ГЕНЕРАЦИЯ СПИСКА КАЧЕСТВА ---
-                    resSelect.innerHTML = ''; // Очищаем список
+                    resSelect.innerHTML = ''; 
                     
-                    // Добавляем пункт "Максимальное"
-                    const bestOpt = document.createElement('option');
-                    bestOpt.value = 'best';
-                    bestOpt.text = translations[currentLang].opt_best;
-                    resSelect.appendChild(bestOpt);
-
-                    // Добавляем реальные разрешения из ответа сервера
                     if (data.resolutions && data.resolutions.length > 0) {
                         data.resolutions.forEach(res => {
                             const opt = document.createElement('option');
                             opt.value = res;
                             
-                            // Красивое название (например, 2160p -> 4K)
                             let label = res + 'p';
                             if (res >= 2160) label += ' (4K Ultra HD)';
                             else if (res >= 1440) label += ' (2K QHD)';
@@ -187,8 +228,12 @@
                             opt.text = label;
                             resSelect.appendChild(opt);
                         });
+                    } else {
+                        const opt = document.createElement('option');
+                        opt.value = 'best';
+                        opt.text = 'Best Quality';
+                        resSelect.appendChild(opt);
                     }
-                    // ---------------------------------
 
                     resultDiv.classList.remove('hidden');
                 }
@@ -224,17 +269,14 @@
                 });
 
                 if (response.ok) {
-                    let filename = "download";
+                    let filename = "download.mp4";
                     const disposition = response.headers.get('Content-Disposition');
-                    if (disposition && disposition.indexOf('attachment') !== -1) {
-                        const regex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
-                        const matches = regex.exec(disposition);
-                        if (matches != null && matches[1]) { 
-                            filename = matches[1].replace(/['"]/g, '');
-                            try { filename = decodeURIComponent(filename); } catch(e){}
+                    
+                    if (disposition) {
+                        const filenameStar = disposition.match(/filename\*=UTF-8''([^;]+)/);
+                        if (filenameStar && filenameStar[1]) {
+                            filename = decodeURIComponent(filenameStar[1]);
                         }
-                    } else {
-                        filename = mode === 'audio' ? "audio.mp3" : "video.mp4";
                     }
 
                     const blob = await response.blob();
@@ -248,7 +290,7 @@
                     btn.innerText = translations[currentLang].status_ready;
                 } else {
                     const errData = await response.json();
-                    alert(errData.error);
+                    alert(errData.error || "Error");
                     btn.innerText = "Error";
                 }
             } catch (e) {
