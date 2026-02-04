@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YT Pro Loader</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="lang-switch">
+        <select id="langSelect" onchange="changeLanguage(this.value)">
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="en">🇺🇸 English</option>
+        </select>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>YT <span>Pro</span></h1>
+            <p data-i18n="subtitle">Профессиональный загрузчик контента</p>
+        </header>
+
+        <div class="card">
+            <div class="input-group">
+                <input type="text" id="videoUrl" placeholder="Ссылка на видео...">
+                <button onclick="analyzeVideo()" data-i18n="btn_find">Найти</button>
+            </div>
+
+            <div id="loader" class="loader hidden"></div>
+
+            <div id="result" class="result hidden">
+                <img id="thumb" src="" alt="Thumbnail">
+                <div class="info">
+                    <h3 id="videoTitle">Title</h3>
+                    <p id="videoDuration">00:00</p>
+                </div>
+
+                <div class="settings-box">
+                    
+                    <div class="setting-row">
+                        <label data-i18n="lbl_format">Формат:</label>
+                        <select id="modeSelect" onchange="toggleOptions()">
+                            <option value="video">Видео (MP4)</option>
+                            <option value="audio">Аудио (MP3)</option>
+                        </select>
+                    </div>
+
+                    <div class="setting-row" id="videoOptions">
+                        <label data-i18n="lbl_res">Разрешение:</label>
+                        <select id="resSelect">
+                            </select>
+                    </div>
+
+                    <div class="setting-row hidden" id="audioOptions">
+                        <label data-i18n="lbl_bitrate">Битрейт:</label>
+                        <select id="bitrateSelect">
+                            <option value="320">320 kbps (Высокое)</option>
+                            <option value="256">256 kbps</option>
+                            <option value="192" selected>192 kbps (Стандарт)</option>
+                            <option value="128">128 kbps</option>
+                        </select>
+                    </div>
+
+                    <button class="download-btn" onclick="downloadContent()" data-i18n="btn_download">Скачать</button>
+                </div>
+            </div>
+            
+            <p id="statusMessage"></p>
+        </div>
+    </div>
+
+    <script>
+        const translations = {
+            ru: {
+                subtitle: "Профессиональный загрузчик контента",
+                placeholder: "Вставьте ссылку...",
+                btn_find: "Найти",
+                btn_download: "Скачать файл",
+                lbl_format: "Формат:",
+                lbl_res: "Разрешение:",
+                lbl_bitrate: "Качество звука:",
+                status_ready: "Готово!",
+                status_downloading: "Обработка и загрузка...",
+                status_error: "Ошибка: ",
+                status_conn_err: "Ошибка сети",
+                opt_best: "Максимальное (Best)"
+            },
+            en: {
+                subtitle: "Professional content downloader",
+                placeholder: "Paste link here...",
+                btn_find: "Find",
+                btn_download: "Download File",
+                lbl_format: "Format:",
+                lbl_res: "Resolution:",
+                lbl_bitrate: "Audio Quality:",
+                status_ready: "Done!",
+                status_downloading: "Processing & Downloading...",
+                status_error: "Error: ",
+                status_conn_err: "Connection Error",
+                opt_best: "Maximum (Best)"
+            }
+        };
+
+        let currentLang = 'ru';
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const userLang = navigator.language.startsWith('en') ? 'en' : 'ru';
+            changeLanguage(userLang);
+            document.getElementById('langSelect').value = userLang;
+        });
+
+        function changeLanguage(lang) {
+            currentLang = lang;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if(translations[lang][key]) el.innerText = translations[lang][key];
+            });
+            document.getElementById('videoUrl').placeholder = translations[lang]['placeholder'];
+        }
+
+        function toggleOptions() {
+            const mode = document.getElementById('modeSelect').value;
+            const vidOpts = document.getElementById('videoOptions');
+            const audOpts = document.getElementById('audioOptions');
+
+            if (mode === 'video') {
+                vidOpts.classList.remove('hidden');
+                audOpts.classList.add('hidden');
+            } else {
+                vidOpts.classList.add('hidden');
+                audOpts.classList.remove('hidden');
+            }
+        }
+
+        async function analyzeVideo() {
+            const url = document.getElementById('videoUrl').value;
+            const status = document.getElementById('statusMessage');
+            const resultDiv = document.getElementById('result');
+            const loader = document.getElementById('loader');
+            const resSelect = document.getElementById('resSelect');
+
+            if(!url) return;
+
+            status.innerText = "";
+            resultDiv.classList.add('hidden');
+            loader.classList.remove('hidden');
+
+            try {
+                const response = await fetch('/get-video-info', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({url: url})
+                });
+                const data = await response.json();
+
+                if(data.error) {
+                    status.innerText = translations[currentLang].status_error + data.error;
+                } else {
+                    document.getElementById('thumb').src = data.thumbnail;
+                    document.getElementById('videoTitle').innerText = data.title;
+                    document.getElementById('videoDuration').innerText = data.duration;
+                    
+                    // --- ГЕНЕРАЦИЯ СПИСКА КАЧЕСТВА ---
+                    resSelect.innerHTML = ''; // Очищаем список
+                    
+                    // Добавляем пункт "Максимальное"
+                    const bestOpt = document.createElement('option');
+                    bestOpt.value = 'best';
+                    bestOpt.text = translations[currentLang].opt_best;
+                    resSelect.appendChild(bestOpt);
+
+                    // Добавляем реальные разрешения из ответа сервера
+                    if (data.resolutions && data.resolutions.length > 0) {
+                        data.resolutions.forEach(res => {
+                            const opt = document.createElement('option');
+                            opt.value = res;
+                            
+                            // Красивое название (например, 2160p -> 4K)
+                            let label = res + 'p';
+                            if (res >= 2160) label += ' (4K Ultra HD)';
+                            else if (res >= 1440) label += ' (2K QHD)';
+                            else if (res >= 1080) label += ' (Full HD)';
+                            else if (res >= 720) label += ' (HD)';
+                            
+                            opt.text = label;
+                            resSelect.appendChild(opt);
+                        });
+                    }
+                    // ---------------------------------
+
+                    resultDiv.classList.remove('hidden');
+                }
+            } catch (e) {
+                console.error(e);
+                status.innerText = translations[currentLang].status_conn_err;
+            } finally {
+                loader.classList.add('hidden');
+            }
+        }
+
+        async function downloadContent() {
+            const url = document.getElementById('videoUrl').value;
+            const btn = document.querySelector('.download-btn');
+            const mode = document.getElementById('modeSelect').value;
+            const resolution = document.getElementById('resSelect').value;
+            const bitrate = document.getElementById('bitrateSelect').value;
+            
+            const originalText = btn.innerText;
+            btn.innerText = translations[currentLang].status_downloading;
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/download', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        url: url,
+                        mode: mode,
+                        resolution: resolution,
+                        bitrate: bitrate
+                    })
+                });
+
+                if (response.ok) {
+                    let filename = "download";
+                    const disposition = response.headers.get('Content-Disposition');
+                    if (disposition && disposition.indexOf('attachment') !== -1) {
+                        const regex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                        const matches = regex.exec(disposition);
+                        if (matches != null && matches[1]) { 
+                            filename = matches[1].replace(/['"]/g, '');
+                            try { filename = decodeURIComponent(filename); } catch(e){}
+                        }
+                    } else {
+                        filename = mode === 'audio' ? "audio.mp3" : "video.mp4";
+                    }
+
+                    const blob = await response.blob();
+                    const downloadUrl = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = downloadUrl;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    btn.innerText = translations[currentLang].status_ready;
+                } else {
+                    const errData = await response.json();
+                    alert(errData.error);
+                    btn.innerText = "Error";
+                }
+            } catch (e) {
+                console.error(e);
+                btn.innerText = translations[currentLang].status_conn_err;
+            } finally {
+                setTimeout(() => { btn.innerText = originalText; btn.disabled = false; }, 3000);
+            }
+        }
+    </script>
+</body>
+</html>
